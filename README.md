@@ -1,197 +1,233 @@
-# Lattice Deduction Transformers
+# Lattice Deduction Transformers — reproduction + đối chiếu baselines
 
-Reproduction code for **Lattice Deduction Transformers** —
-Liam Davis, Leopold Haller, Alberto Alfarano, Mark Santolucito.
-[arXiv:2605.08605](https://arxiv.org/abs/2605.08605).
+Repo này gồm hai phần tách biệt:
 
-This repo contains the training / inference / data-generation code for every
-experiment whose numbers appear in the paper. The three benchmarks are
-self-contained subdirectories under `experiments/`:
+1. **Tái lập LDT** (Lattice Deduction Transformers) trên hai benchmark Sudoku.
+2. **Đóng góp của đồ án**: một benchmark Sudoku mở rộng (`scaled sudoku`) và
+   hai baseline recursive reasoner (TRM, HRM) được cài vào cùng harness để so
+   sánh công bằng với LDT.
 
-| Benchmark | Subdir | Paper result |
-|---|---|---|
-| Sudoku-Extreme | `experiments/sudoku/` | Table 1 (LDT rows) + Figure 2 |
-| Snowflake Sudoku | `experiments/snowflake/` | Table 2 |
-| Maze-Hard (30×30) | `experiments/maze/` | Table 3 + Figure 3 (K-sweep) |
-
-The shared package `lattice_diffusion/` holds the looped-transformer model,
-the dataset loaders, and the Modal image / checkpoint utilities used by all
-three.
-
-All training and inference runs are launched on [Modal](https://modal.com/)
-B200 GPUs. There is no local-GPU codepath.
-
-> **Status (reconstruction).** This is a curated reconstruction of the
-> codebase used for the paper's experiments — the original development
-> tree carried many exploratory branches, sweeps, and dead ends; this
-> repo is the minimal subset needed to reproduce the reported numbers.
-> We are currently in the process of validating the results end-to-end
-> against the original runs, and will update this note as that work
-> completes.
+> Phần (1) là mã nguồn của nhóm tác giả gốc, dưới giấy phép MIT —
+> xem [`LICENSE`](LICENSE). Phần (2) là phần được bổ sung cho đồ án.
 
 ---
 
-## Setup
+## 1. Nguồn gốc và ghi công
 
-```bash
-uv sync
-modal token new                              # one-time Modal auth
-modal secret create huggingface-secret HF_TOKEN=<your HF token>
-```
+**Lattice Deduction Transformers** — Liam Davis, Leopold Haller,
+Alberto Alfarano, Mark Santolucito. [arXiv:2605.08605](https://arxiv.org/abs/2605.08605).
 
-The HF token is read by Modal containers so the runtime `huggingface_hub`
-client doesn't hit unauthenticated rate limits when downloading
-`sapientinc/sudoku-extreme` and `sapientinc/maze-30x30-hard-1k`. Both
-datasets are public; consult their HuggingFace dataset cards for terms
-of use.
+Toàn bộ code LDT ở đây (`src/lattice_diffusion/`) là **bản dựng lại có
+chọn lọc** từ codebase gốc, do nhóm trên viết cho các thí nghiệm trong
+paper. Không sửa một dòng nào trong `upstream/`.
 
----
+Mã của TRM và HRM giữ nguyên từ các repo gốc của chúng, đặt trong
+`upstream/` và không bị chỉnh sửa:
 
-## Reproducing the paper results
+| Model | Nguồn |
+|---|---|
+| TRM — Tiny Recursive Models | `upstream/TinyRecursiveModels/` |
+| HRM — Hierarchical Recursive Model | `upstream/HRM/` |
 
-Every experiment is a Modal app with a `local_entrypoint`. Run it with
-`uv run modal run --detach <path>` (the `--detach` lets the run survive
-your laptop sleeping). Each run trains a checkpoint, evaluates it, and
-writes a `<ckpt>.eval.json` + `<ckpt>.eval.jsonl` next to the checkpoint
-on the `lattice-diffusion-checkpoints` Modal volume.
-
-### Sudoku-Extreme (Table 1)
-
-The four LDT rows of Table 1 are the same `run.py` at four configurations.
-The `run.py` default `--n-eval-puzzles 200` is the inline quick-check; pass
-`--n-eval-puzzles 4000` to evaluate on a larger test sample, or re-eval a
-saved checkpoint on the full test split with the parallel `eval_only.py`
-script.
-
-> **Note.** As reported, these runs match the Sudoku-Extreme solve rate in
-> Table 1 (100%). We have since realized, however, that the reported figure
-> came from an evaluation that inadvertently skipped a full pass over the
-> test set. On a complete evaluation the true solve rate is ~99.96%, and we
-> are in the process of correcting the paper. See
-> [this thread](https://x.com/biosemiote/status/2061848053741687016) for
-> context.
-
-```bash
-# LDT, 4K train steps (Table 1 top row)
-uv run modal run --detach experiments/sudoku/run.py \
-    --steps 4000 --n-train-puzzles 1000 --n-eval-puzzles 4000
-
-# LDT, 1K and 2K train steps (Table 1 mid-rows)
-uv run modal run --detach experiments/sudoku/run.py --steps 1000 --n-train-puzzles 1000 --n-eval-puzzles 4000
-uv run modal run --detach experiments/sudoku/run.py --steps 2000 --n-train-puzzles 1000 --n-eval-puzzles 4000
-
-# No-augmentation variant (last row)
-uv run modal run --detach experiments/sudoku/run.py \
-    --steps 4000 --n-train-puzzles 1000 --n-eval-puzzles 4000 \
-    --no-augment --no-data-augment-digit-perm --no-data-augment-dihedral
-```
-
-For the train-vs-test-compute figure (Figure 2a), repeat the above at
-multiple step counts and across 3 seeds.
-
-### Snowflake Sudoku (Table 2)
-
-The Snowflake puzzles are generated with CVC5 via the
-[snowflakesudoku](https://github.com/santolucito/snowflakesudoku) helper
-package (MIT-licensed, cloned at Modal-image build time).
-
-```bash
-# One-time: generate the ~30K-puzzle dataset (CVC5, ~100 CPU workers, parallel)
-uv run modal run --detach experiments/snowflake/gen_data.py
-
-# Train + eval (headline: 100 / 100 on 1,000-puzzle test split)
-uv run modal run --detach experiments/snowflake/run.py \
-    --steps 1000 --n-train-puzzles 500 --n-eval-puzzles 1000
-```
-
-`gen_data.py` writes `/data/snowflake_train.parquet` and
-`/data/snowflake_test.parquet` to the `lattice-diffusion-data` volume.
-
-### Maze-Hard (Table 3, K=1 and K=512)
-
-`eval_cls_threshold=0.53` is the per-paper Maze-Hard CLS threshold,
-calibrated on a held-out set (vs.\ the `0.6` used elsewhere).
-`eval_dropout_p=0.0` disables eval-time MHA dropout for the 30×30 setting.
-
-The 30×30 training command leaves the in-train final eval at the
-default 200-puzzle quick-check (eval at the training batch size of 192
-runs comfortably here; pushing it to the full 1,000 puzzles inline at
-this grid + model size has been observed to OOM). The headline
-1,000-puzzle number comes from the parallel `eval_only.py` call below.
-
-```bash
-# K=1 (head-to-head with TRM)
-uv run modal run --detach experiments/maze/run.py \
-    --dataset maze_hard --steps 20000 --batch-size 192 \
-    --model-dim 192 --use-rope --pool-size-mult 2.0 \
-    --k-solutions 1 --eval-cls-threshold 0.53 --eval-dropout-p 0.0
-
-# K=512
-uv run modal run --detach experiments/maze/run.py \
-    --dataset maze_hard --steps 20000 --batch-size 192 \
-    --model-dim 192 --use-rope --pool-size-mult 2.0 \
-    --k-solutions 512 --eval-cls-threshold 0.53 --eval-dropout-p 0.0
-```
-
-For the K=512 setting the K-paths precompute is expensive; pregen the
-canonical pool first on a CPU container (grid-size and worker-count are
-fixed for `maze_hard` since the HF split is exactly 30×30 / single-pool;
-they only matter for `--dataset synthetic`):
-
-```bash
-uv run modal run --detach experiments/maze/pregen.py \
-    --dataset maze_hard --k-solutions 512
-```
-
-Then run the full 1,000-puzzle eval via the parallel `eval_only.py`
-(fans across N B200 workers at a smaller per-worker batch so the
-30×30 dim=192 model stays well under the GPU memory ceiling;
-checkpoints land at `/checkpoints/maze/maze_hard_30x30_seed<N>_<...>.pt`):
-
-```bash
-uv run modal run --detach experiments/maze/eval_only.py \
-    --checkpoint /checkpoints/maze/maze_hard_30x30_seed0_<...>.pt \
-    --workers 20 --batch-size 64 --dataset maze_hard --n-eval 1000 \
-    --cls-threshold 0.53 --dropout-p 0.0
-```
-
-### Maze K-sweep figure (Figure 3, 15×15 synthetic)
-
-The K-sweep uses the base maze setup (no RoPE, dim=128) but overrides the
-`maze/run.py` default deduce `--threshold 0.5` back to the dpll-default
-`0.1`. Each K is averaged over 4 seeds.
-
-```bash
-# Repeat for K in {1, 8, 32, 64, 128, 256, 512} and seeds in {0, 2, 3, 4}
-uv run modal run --detach experiments/maze/run.py \
-    --dataset synthetic --grid-size 15 \
-    --steps 4000 --batch-size 256 \
-    --threshold 0.1 --n-puzzles 10000 \
-    --k-solutions <K> --seed <S>
-```
+Các câu hỏi mở, suy luận và số liệu trong `reports/` là phần đóng góp của
+đồ án.
 
 ---
 
-## Directory layout
+## 2. Những gì đã chạy thật
+
+Mọi số dưới đây đo trên GPU Modal B200, bf16, seed 0.
+
+### 2.1. Sudoku-Extreme (LDT)
+
+Bộ 4.000 puzzle từ `sapientinc/sudoku-extreme`. Huấn luyện 4.000 bước ×
+batch 512, eval 64 chains × 1.000 vòng.
+
+| Chỉ số | Kết quả |
+|---|---|
+| Đúng | 3.995 / 4.000 |
+| **Trả lời sai** | **0** |
+| Hết giờ (chưa giải xong) | 5 |
+| Tỉ lệ suy luận không sound | 0,0026 |
+| Thời gian train | 926 s |
+
+| | Giá trị |
+|---|---|
+| Checkpoint | `/checkpoints/sudoku/seed0_4000s_bs512_aug1_20261003_040535_*.pt` |
+| Log eval | `logs/phase2_sudoku_B200.eval.json` |
+
+### 2.2. Snowflake Sudoku (LDT)
+
+1.000 puzzle do nhóm LDT sinh bằng solver CVC5. Đây là sân riêng của LDT —
+paper gốc ghi rõ TRM, HRM và Sotaku **không** được huấn luyện trên bộ này.
+
+| Chỉ số | Kết quả |
+|---|---|
+| Đúng | **1.000 / 1.000** |
+| **Trả lời sai** | **0** |
+| Hết giờ | 0 |
+
+| | Giá trị |
+|---|---|
+| Checkpoint | `/checkpoints/snowflake/seed0_1000s_bs512_aug1_20261003_044719_*.pt` |
+| Log eval | `logs/phase3_snowflake_B200.eval.json` |
+
+### 2.3. Killer Sudoku — thử nghiệm giới hạn (LDT)
+
+Sinh bằng CVC5, huấn luyện tiếp từ checkpoint Sudoku-Extreme, đánh giá một
+lần duy nhất trên tập test. Mục đích: xác định LDT còn chịu được bao xa khi
+bài toán vượt quá cấu trúc mà nó sinh ra.
+
+Code: `experiments/killer/`. Báo cáo đầy đủ: [`reports/bao-cao.md`](reports/bao-cao.md).
+
+Kết quả chính: model LDT đã huấn luyện trên Sudoku-Extreme **không** giải
+được câu Killer nào khi bị cấp lồng và tổng (0/56 ở Exp #1). Mở rộng đầu
+vào để đọc được thông tin lồng/tổng vẫn không đủ — đây là bằng chứng LDT
+cần thay đổi kiến trúc, không phải chỉ thêm thông tin đầu vào.
+
+### 2.4. Scaled Sudoku — benchmark mới của đồ án
+
+102.456 puzzle 9×9: 10.000 puzzle gốc tối thiểu + 92.456 biến thể dễ hơn.
+Chia theo nhóm ancestor để không rò rỉ:
+
+| Tập | Số puzzle |
+|---|---|
+| Train | 82.043 |
+| Validation | 10.174 |
+| Test | 10.239 |
+| **Leak** | **0** |
+
+Nguồn corpus: Mikael Zayenz Lagerkvist, *Scaling Sudoku as a Constraint
+Problem*. Độ khó gắn nhãn theo phương pháp suy luận yếu nhất giải được.
+
+Mọi run dùng chung một file split đóng băng: `scaled_sudoku_split.jsonl`.
+
+### 2.5. Ba model trên scaled sudoku — so sánh compute-matched
+
+Nguyên tắc: **cả ba cùng nhìn khoảng 2,05 triệu examples.** "Step" của
+các paper khác nhau không cùng định nghĩa, nên ta khóa theo số examples
+chứ không theo số bước.
+
+| | LDT | TRM | HRM |
+|---|---|---|---|
+| Tham số | **799.635** | 5.027.842 | 27.274.242 |
+| Steps × batch | 4.000 × 512 | 2.667 × 768 | 2.667 × 768 |
+| **Test** | **99,94%** | 30,45% | 34,50% |
+| — Base (1.000 câu tối thiểu) | **996** | **0** | 6 |
+| — Variant (9.239 câu dễ) | 9.237 | 3.118 | 3.526 |
+| Suy luận trung bình/câu | 12,8 vòng | 128 call | — |
+
+Phát hiển chính: khoảng cách giữa ba model nằm ở **nhóm puzzle tối thiểu**,
+không phải ở nhóm biến thể dễ. Hai model recursive gần như không giải được
+câu nào ở nhóm khó, trong khi đó giữ được 99,9–100% ở mọi nhóm độ khó
+suy luận.
+
+**Giới hạn phải đọc kèm:** ở một nửa ngân sách (1.023.744 examples) TRM
+đạt **0,00%** trên cả 10.239 câu. Điểm 2.667 bước nằm ngay sau bậc nhảy,
+nên bảng trên là phép đo ở một ngân sách cụ thể, **không** phải bảng xếp
+hạng method. Chi tiết: `reports/EVAL-SWEEP-AND-CURVE.md`.
+
+---
+
+## 3. Cấu trúc thư mục
 
 ```
-src/lattice_diffusion/
-  data/               Streaming datasets (sudoku_extreme, maze_hard, maze_synthetic)
-  models/             Looped transformer + 2D transformer backbone + weighted-BCE loss
-  modal/              Shared Modal image / volume / secret definitions
-  training/utils/     Checkpoint I/O and cosine LR scheduler
+src/lattice_diffusion/     Mã LDT: model, data loader, tiện ích Modal
+  models/
+    looped_transformer.py    PowersetModel — kiến trúc lõi của LDT
+    transformer2d.py         Khối transformer 2D
+    weighted_bce.py          Loss BCE có trọng số
+  data/
+    sudoku_extreme.py        Loader Sudoku-Extreme
+    scaled_sudoku.py         Loader scaled sudoku (viết cho đồ án)
+  training/utils/           Checkpoint, scheduler
+  modal/                    Định nghĩa image và volume cho Modal
+
 experiments/
-  sudoku/       Owns the shared `dpll_step` deduction primitive, the
-                      pool-based trainer, and the parallel solver. All other
-                      experiments import dpll/solve/ema/aug from here.
-  snowflake/    Snowflake-specific data loader + trainer wrapper + CVC5
-                      data generator.
-  maze/         Maze data loader (handles both the `maze_hard` HF
-                      split and on-the-fly `synthetic` mazes, plus a
-                      K-paths sampler with a pregen cache) + trainer
-                      wrapper + parallel eval.
+  sudoku/                  Sudoku-Extreme
+  snowflake/               Sinh dữ liệu + train + eval Snowflake
+  killer/                  Thử nghiệm giới hạn Killer Sudoku
+  scaled/                  LDT trên scaled sudoku
+  scaled_trm/              Baseline TRM (bổ sung cho đồ án)
+  scaled_hrm/              Baseline HRM (bổ sung cho đồ án)
+
+upstream/                  Mã gốc, không sửa
+  TinyRecursiveModels/
+  HRM/
+
+reports/                   Toàn bộ báo cáo và bảng số liệu
+logs/                      Log eval thô (nguồn của mọi con số)
+scaled_sudoku_split.jsonl  Split đóng băng, dùng chung cho cả ba model
 ```
 
-All hyperparameters live in the `run.py` defaults and in
-Appendix C of the paper. The `--help` of each `modal run …` shows every
-flag.
+### Quy tắc giữ ranh giới
+
+`upstream/` **không sửa một dòng**, kiểm bằng cách so hash SHA-256 từng file
+với bản gốc trên GitHub:
+
+| Repo | Kết quả so hash | Commit |
+|---|---|---|
+| `TinyRecursiveModels` (40 file) | **40 / 40 khớp, 0 khác biệt** | `c01103738605` |
+| `HRM` (26 file) | **26 / 26 khớp, 0 khác biệt** | `ac15626f8db0` |
+
+Không dùng `git diff -- upstream/` để làm bằng chứng: thư mục đó không được
+git track nên lệnh luôn rỗng dù đã sửa hay chưa.
+
+Mọi sai lệch so với recipe gốc đều được liệt kê trong `reports/TRM.md` và
+`reports/HRM.md`. Chỉ có `adam_atan2_torch.py` là vendor lại (thay cho
+package `adam-atan2` cần nvcc, không có wheel cho B200), đã kiểm khớp
+reference float64 tới 2e-7.
+
+---
+
+## 4. Chạy
+
+Tất cả run đều đi qua Modal, không có codepath GPU local.
+
+```bash
+pip install modal
+modal setup
+
+# Sudoku-Extreme
+modal run experiments/sudoku/run.py
+
+# Snowflake
+modal run experiments/snowflake/run.py
+
+# Scaled sudoku
+modal run experiments/scaled/run.py
+modal run experiments/scaled_trm/run.py
+modal run experiments/scaled_hrm/run.py
+```
+
+Yêu cầu: đặt `PYTHONPATH=src`, vì `lattice_diffusion` nằm ở `src/` chứ
+không ở thư mục gốc.
+
+Mọi script chạy có tiền đều phải qua smoke T4 trước, và smoke phải chạm
+tới đúng nhánh code của run thật — xem `reports/EVAL-SWEEP-AND-CURVE.md` §7.
+
+---
+
+## 5. Báo cáo
+
+| File | Nội dung |
+|---|---|
+| `reports/BASELINES.md` | Bảng tổng hợp ba model, phân tách theo độ khó, đề xuất hướng cải thiện |
+| `reports/bao-cao.md` | Killer Sudoku: LDT vỡ ở đâu và vì sao cần đổi kiến trúc |
+| `reports/TRM.md` | Baseline TRM: kết quả, khai báo 11 điểm khác gốc |
+| `reports/HRM.md` | Baseline HRM: kết quả, khai báo 12 điểm khác gốc |
+| `reports/EVAL-SWEEP-AND-CURVE.md` | Loại trừ confound test-time compute; đường học; 6 bug đã bắt |
+| `reports/TABLES-FOR-REPORT.md` | Bảng số sẵn để đưa vào báo cáo |
+| `reports/scaled_sudoku_full_report.md` | Báo cáo scaled sudoku (LDT) |
+
+---
+
+## 6. Benchmark nào không có ở đây
+
+**Maze-Hard (30×30)** — có trong paper LDT (Table 3, Figure 3) nhưng
+**không được chạy trong đồ án này**. Thư mục `experiments/maze/` và hai
+loader trong `src/lattice_diffusion/data/` đã bị gỡ bỏ vì không có kết quả
+nào sinh ra. Ai cần chạy thì dựng lại từ paper.
+
+**RSM và FPRM** — hai hướng recursive reasoning khác, xem
+`reports/BASELINES.md` §13.5. Chưa đánh giá trong đồ án này.
