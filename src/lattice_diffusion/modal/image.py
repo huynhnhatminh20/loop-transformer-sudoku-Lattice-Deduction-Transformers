@@ -6,6 +6,9 @@ image = (
     modal.Image.debian_slim(python_version="3.10")
     .apt_install("git")
     .uv_sync()
+    # NOTE: build steps must come BEFORE add_local_* steps.
+    # uv_pip_install (not pip_install): the uv venv has no pip module.
+    .uv_pip_install("wandb")
     .add_local_python_source("lattice_diffusion")
     .add_local_python_source("experiments")
 )

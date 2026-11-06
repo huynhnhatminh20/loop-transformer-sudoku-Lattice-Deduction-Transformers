@@ -95,7 +95,7 @@ app = modal.App("snowflake")
     image=image,
     gpu="B200",
     timeout=3600 * 4,
-    secrets=[hf_secret],
+    secrets=[],  # NOTE: orig [hf_secret]; snowflake uses CVC5-generated data, no HF download needed
     volumes={DATA_MOUNT: data_volume, CHECKPOINT_MOUNT: checkpoint_volume},
 )
 def run(

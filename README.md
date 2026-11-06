@@ -24,10 +24,10 @@ paper. Không sửa một dòng nào trong `upstream/`.
 Mã của TRM và HRM giữ nguyên từ các repo gốc của chúng, đặt trong
 `upstream/` và không bị chỉnh sửa:
 
-| Model | Nguồn |
-|---|---|
-| TRM — Tiny Recursive Models | `upstream/TinyRecursiveModels/` |
-| HRM — Hierarchical Recursive Model | `upstream/HRM/` |
+| Model                               | Nguồn                            |
+| ----------------------------------- | --------------------------------- |
+| TRM — Tiny Recursive Models        | `upstream/TinyRecursiveModels/` |
+| HRM — Hierarchical Recursive Model | `upstream/HRM/`                 |
 
 Các câu hỏi mở, suy luận và số liệu trong `reports/` là phần đóng góp của
 đồ án.
@@ -43,34 +43,34 @@ Mọi số dưới đây đo trên GPU Modal B200, bf16, seed 0.
 Bộ 4.000 puzzle từ `sapientinc/sudoku-extreme`. Huấn luyện 4.000 bước ×
 batch 512, eval 64 chains × 1.000 vòng.
 
-| Chỉ số | Kết quả |
-|---|---|
-| Đúng | 3.995 / 4.000 |
-| **Trả lời sai** | **0** |
-| Hết giờ (chưa giải xong) | 5 |
-| Tỉ lệ suy luận không sound | 0,0026 |
-| Thời gian train | 926 s |
+| Chỉ số                       | Kết quả     |
+| ------------------------------ | ------------- |
+| Đúng                         | 3.995 / 4.000 |
+| **Trả lời sai**        | **0**   |
+| Hết giờ (chưa giải xong)   | 5             |
+| Tỉ lệ suy luận không sound | 0,0026        |
+| Thời gian train               | 926 s         |
 
-| | Giá trị |
-|---|---|
+|            | Giá trị                                                           |
+| ---------- | ------------------------------------------------------------------- |
 | Checkpoint | `/checkpoints/sudoku/seed0_4000s_bs512_aug1_20261003_040535_*.pt` |
-| Log eval | `logs/phase2_sudoku_B200.eval.json` |
+| Log eval   | `logs/phase2_sudoku_B200.eval.json`                               |
 
 ### 2.2. Snowflake Sudoku (LDT)
 
 1.000 puzzle do nhóm LDT sinh bằng solver CVC5. Đây là sân riêng của LDT —
 paper gốc ghi rõ TRM, HRM và Sotaku **không** được huấn luyện trên bộ này.
 
-| Chỉ số | Kết quả |
-|---|---|
-| Đúng | **1.000 / 1.000** |
-| **Trả lời sai** | **0** |
-| Hết giờ | 0 |
+| Chỉ số                | Kết quả               |
+| ----------------------- | ----------------------- |
+| Đúng                  | **1.000 / 1.000** |
+| **Trả lời sai** | **0**             |
+| Hết giờ               | 0                       |
 
-| | Giá trị |
-|---|---|
+|            | Giá trị                                                              |
+| ---------- | ---------------------------------------------------------------------- |
 | Checkpoint | `/checkpoints/snowflake/seed0_1000s_bs512_aug1_20261003_044719_*.pt` |
-| Log eval | `logs/phase3_snowflake_B200.eval.json` |
+| Log eval   | `logs/phase3_snowflake_B200.eval.json`                               |
 
 ### 2.3. Killer Sudoku — thử nghiệm giới hạn (LDT)
 
@@ -78,7 +78,7 @@ Sinh bằng CVC5, huấn luyện tiếp từ checkpoint Sudoku-Extreme, đánh g
 lần duy nhất trên tập test. Mục đích: xác định LDT còn chịu được bao xa khi
 bài toán vượt quá cấu trúc mà nó sinh ra.
 
-Code: `experiments/killer/`. Báo cáo đầy đủ: [`reports/bao-cao.md`](reports/bao-cao.md).
+Code: `experiments/killer/`. Báo cáo đầy đủ: [`reports/bao-cao-tong-hop.md`](reports/bao-cao-tong-hop.md) (phần Killer Sudoku).
 
 Kết quả chính: model LDT đã huấn luyện trên Sudoku-Extreme **không** giải
 được câu Killer nào khi bị cấp lồng và tổng (0/56 ở Exp #1). Mở rộng đầu
@@ -90,11 +90,11 @@ cần thay đổi kiến trúc, không phải chỉ thêm thông tin đầu vào
 102.456 puzzle 9×9: 10.000 puzzle gốc tối thiểu + 92.456 biến thể dễ hơn.
 Chia theo nhóm ancestor để không rò rỉ:
 
-| Tập | Số puzzle |
-|---|---|
-| Train | 82.043 |
-| Validation | 10.174 |
-| Test | 10.239 |
+| Tập           | Số puzzle  |
+| -------------- | ----------- |
+| Train          | 82.043      |
+| Validation     | 10.174      |
+| Test           | 10.239      |
 | **Leak** | **0** |
 
 Nguồn corpus: Mikael Zayenz Lagerkvist, *Scaling Sudoku as a Constraint
@@ -108,14 +108,14 @@ Nguyên tắc: **cả ba cùng nhìn khoảng 2,05 triệu examples.** "Step" c�
 các paper khác nhau không cùng định nghĩa, nên ta khóa theo số examples
 chứ không theo số bước.
 
-| | LDT | TRM | HRM |
-|---|---|---|---|
-| Tham số | **799.635** | 5.027.842 | 27.274.242 |
-| Steps × batch | 4.000 × 512 | 2.667 × 768 | 2.667 × 768 |
-| **Test** | **99,94%** | 30,45% | 34,50% |
-| — Base (1.000 câu tối thiểu) | **996** | **0** | 6 |
-| — Variant (9.239 câu dễ) | 9.237 | 3.118 | 3.526 |
-| Suy luận trung bình/câu | 12,8 vòng | 128 call | — |
+|                                  | LDT               | TRM          | HRM          |
+| -------------------------------- | ----------------- | ------------ | ------------ |
+| Tham số                         | **799.635** | 5.027.842    | 27.274.242   |
+| Steps × batch                   | 4.000 × 512      | 2.667 × 768 | 2.667 × 768 |
+| **Test**                   | **99,94%**  | 30,45%       | 34,50%       |
+| — Base (1.000 câu tối thiểu) | **996**     | **0**  | 6            |
+| — Variant (9.239 câu dễ)      | 9.237             | 3.118        | 3.526        |
+| Suy luận trung bình/câu       | 12,8 vòng        | 128 call     | —           |
 
 Phát hiển chính: khoảng cách giữa ba model nằm ở **nhóm puzzle tối thiểu**,
 không phải ở nhóm biến thể dễ. Hai model recursive gần như không giải được
@@ -125,7 +125,7 @@ suy luận.
 **Giới hạn phải đọc kèm:** ở một nửa ngân sách (1.023.744 examples) TRM
 đạt **0,00%** trên cả 10.239 câu. Điểm 2.667 bước nằm ngay sau bậc nhảy,
 nên bảng trên là phép đo ở một ngân sách cụ thể, **không** phải bảng xếp
-hạng method. Chi tiết: `reports/EVAL-SWEEP-AND-CURVE.md`.
+hạng method. Chi tiết: `reports/bao-cao-tong-hop.md` (mục TRM vs LDT).
 
 ---
 
@@ -155,7 +155,7 @@ upstream/                  Mã gốc, không sửa
   TinyRecursiveModels/
   HRM/
 
-reports/                   Toàn bộ báo cáo và bảng số liệu
+reports/                   Báo cáo tổng hợp (đã gộp) + bảng số liệu
 logs/                      Log eval thô (nguồn của mọi con số)
 scaled_sudoku_split.jsonl  Split đóng băng, dùng chung cho cả ba model
 ```
@@ -165,16 +165,16 @@ scaled_sudoku_split.jsonl  Split đóng băng, dùng chung cho cả ba model
 `upstream/` **không sửa một dòng**, kiểm bằng cách so hash SHA-256 từng file
 với bản gốc trên GitHub:
 
-| Repo | Kết quả so hash | Commit |
-|---|---|---|
+| Repo                              | Kết quả so hash                      | Commit           |
+| --------------------------------- | -------------------------------------- | ---------------- |
 | `TinyRecursiveModels` (40 file) | **40 / 40 khớp, 0 khác biệt** | `c01103738605` |
-| `HRM` (26 file) | **26 / 26 khớp, 0 khác biệt** | `ac15626f8db0` |
+| `HRM` (26 file)                 | **26 / 26 khớp, 0 khác biệt** | `ac15626f8db0` |
 
 Không dùng `git diff -- upstream/` để làm bằng chứng: thư mục đó không được
 git track nên lệnh luôn rỗng dù đã sửa hay chưa.
 
-Mọi sai lệch so với recipe gốc đều được liệt kê trong `reports/TRM.md` và
-`reports/HRM.md`. Chỉ có `adam_atan2_torch.py` là vendor lại (thay cho
+Mọi sai lệch so với recipe gốc đều được liệt kê trong
+`reports/bao-cao-tong-hop.md` (phần TRM và HRM). Chỉ có `adam_atan2_torch.py` là vendor lại (thay cho
 package `adam-atan2` cần nvcc, không có wheel cho B200), đã kiểm khớp
 reference float64 tới 2e-7.
 
@@ -204,30 +204,8 @@ Yêu cầu: đặt `PYTHONPATH=src`, vì `lattice_diffusion` nằm ở `src/` ch
 không ở thư mục gốc.
 
 Mọi script chạy có tiền đều phải qua smoke T4 trước, và smoke phải chạm
-tới đúng nhánh code của run thật — xem `reports/EVAL-SWEEP-AND-CURVE.md` §7.
+tới đúng nhánh code của run thật — xem `reports/bao-cao-tong-hop.md` (mục TRM vs LDT, §7).
 
 ---
 
-## 5. Báo cáo
-
-| File | Nội dung |
-|---|---|
-| `reports/BASELINES.md` | Bảng tổng hợp ba model, phân tách theo độ khó, đề xuất hướng cải thiện |
-| `reports/bao-cao.md` | Killer Sudoku: LDT vỡ ở đâu và vì sao cần đổi kiến trúc |
-| `reports/TRM.md` | Baseline TRM: kết quả, khai báo 11 điểm khác gốc |
-| `reports/HRM.md` | Baseline HRM: kết quả, khai báo 12 điểm khác gốc |
-| `reports/EVAL-SWEEP-AND-CURVE.md` | Loại trừ confound test-time compute; đường học; 6 bug đã bắt |
-| `reports/TABLES-FOR-REPORT.md` | Bảng số sẵn để đưa vào báo cáo |
-| `reports/scaled_sudoku_full_report.md` | Báo cáo scaled sudoku (LDT) |
-
 ---
-
-## 6. Benchmark nào không có ở đây
-
-**Maze-Hard (30×30)** — có trong paper LDT (Table 3, Figure 3) nhưng
-**không được chạy trong đồ án này**. Thư mục `experiments/maze/` và hai
-loader trong `src/lattice_diffusion/data/` đã bị gỡ bỏ vì không có kết quả
-nào sinh ra. Ai cần chạy thì dựng lại từ paper.
-
-**RSM và FPRM** — hai hướng recursive reasoning khác, xem
-`reports/BASELINES.md` §13.5. Chưa đánh giá trong đồ án này.

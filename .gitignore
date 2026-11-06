@@ -8,6 +8,18 @@ __pycache__/
 *.parquet
 *.eval.json
 *.eval.jsonl
+wandb.api
+.api
 /data/
 /checkpoints/
 /logs/
+
+# Raw datasets and frozen split (too large for GitHub; regenerate/download)
+/scaled-sudoku-instances/
+/scaled_sudoku_split.jsonl
+
+# Tool caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/

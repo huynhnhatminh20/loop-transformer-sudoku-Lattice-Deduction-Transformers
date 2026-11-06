@@ -96,7 +96,7 @@ app = modal.App("sudoku")
     image=image,
     gpu="B200",
     timeout=3600 * 4,
-    secrets=[hf_secret],
+    secrets=[],  # NOTE: orig [hf_secret]; public HF dataset works unauthenticated, data now cached on volume
     volumes={DATA_MOUNT: data_volume, CHECKPOINT_MOUNT: checkpoint_volume},
 )
 def run(
