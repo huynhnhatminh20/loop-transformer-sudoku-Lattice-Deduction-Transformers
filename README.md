@@ -18,35 +18,35 @@ Mọi số đo trên Modal B200, bf16, seed 0.
 
 4.000 puzzle, train 4.000 bước × batch 512.
 
-| Chỉ số | Kết quả |
-|---|---:|
-| Đúng | 3.995 / 4.000 |
-| Sai | 0 |
-| Timeout | 5 |
-| Thời gian train | 926 s |
+| Chỉ số         |     Kết quả |
+| ---------------- | ------------: |
+| Đúng           | 3.995 / 4.000 |
+| Sai              |             0 |
+| Timeout          |             5 |
+| Thời gian train |         926 s |
 
 ### Snowflake Sudoku — LDT
 
 1.000 puzzle hexagonal, 6 chữ số, lưới phủ 15×10, vocab 6.
 
-| Chỉ số | Kết quả |
-|---|---:|
-| Đúng | 1.000 / 1.000 |
-| Sai | 0 |
-| Timeout | 0 |
+| Chỉ số |     Kết quả |
+| -------- | ------------: |
+| Đúng   | 1.000 / 1.000 |
+| Sai      |             0 |
+| Timeout  |             0 |
 
 ### Scaled Sudoku — LDT / TRM / HRM
 
 102.456 puzzle 9×9: 10.000 puzzle tối thiểu + 92.456 biến thể. Chia theo
 ancestor group, leak = 0. Cả ba model nhìn khoảng 2,05 triệu examples.
 
-| | LDT | TRM | HRM |
-|---|---:|---:|---:|
-| Tham số | 799.635 | 5.027.842 | 27.274.242 |
-| Steps × batch | 4.000 × 512 | 2.667 × 768 | 2.667 × 768 |
-| Test | **99,94%** | 30,45% | 34,50% |
-| Base (1.000 câu) | **996** | 0 | 6 |
-| Variant (9.239 câu) | 9.237 | 3.118 | 3.526 |
+|                      |              LDT |          TRM |          HRM |
+| -------------------- | ---------------: | -----------: | -----------: |
+| Tham số             |          799.635 |    5.027.842 |   27.274.242 |
+| Steps × batch       |     4.000 × 512 | 2.667 × 768 | 2.667 × 768 |
+| Test                 | **99,94%** |       30,45% |       34,50% |
+| Base (1.000 câu)    |    **996** |            0 |            6 |
+| Variant (9.239 câu) |            9.237 |        3.118 |        3.526 |
 
 Khoảng cách giữa ba model nằm ở nhóm puzzle tối thiểu, không phải nhóm biến
 thể dễ. Ở nửa ngân sách (1.023.744 examples), TRM đạt 0,00% trên cả 10.239
