@@ -19,23 +19,12 @@ luồng train/eval chính, nhưng vẫn giữ lại để xem lại cách đo v�
 
 ## Cách chạy
 
-Mở terminal ở **thư mục gốc của repo** rồi chạy:
+Các script trong thư mục này được thiết kế cho runner GPU từ xa của nhóm;
+repo không có codepath GPU local. Mở terminal ở **thư mục gốc của repo**,
+đặt `PYTHONPATH=src`, cấu hình runner rồi chạy entry point tương ứng. Xem
+docstring đầu mỗi file để biết tham số và cách chọn chế độ smoke/full.
 
-```bash
-modal run experiments/oneoff/scaled_smoke.py
-modal run experiments/oneoff/scaled_b200_smoke.py
-modal run experiments/oneoff/scaled_pilot.py
-modal run experiments/oneoff/hrm_t4_smoke.py
-modal run experiments/oneoff/trm_t4_smoke.py
-modal run --detach experiments/oneoff/eval_sweep.py
-modal run --detach experiments/oneoff/learning_curve.py
-```
-
-Chạy `balance_tables.py` thì chọn bảng bằng biến môi trường:
-
-```bash
-BT_TABLE=1 BT_SEEDS="0 1 2" modal run -m experiments.oneoff.balance_tables::ldt_entry
-```
+`balance_tables.py` chọn bảng bằng biến môi trường `BT_TABLE` và `BT_SEEDS`.
 
 ## Lưu ý
 

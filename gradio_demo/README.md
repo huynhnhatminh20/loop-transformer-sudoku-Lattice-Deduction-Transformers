@@ -48,16 +48,16 @@ Thư mục này cung cấp giao diện Web trực quan (viết bằng [Gradio](h
 
 | Model | File local | Nguồn | Độ chính xác tham khảo |
 |---|---|---|---|
-| LDT | `checkpoints/ldt_scaled_sudoku.pt` | Modal `huynhngoccung74/lattice-diffusion-checkpoints` — `/scaled/seed0_4000s_bs512_20261003_131000.pt` | 99,94% (Scaled Sudoku) |
-| HRM | `checkpoints/hrm_scaled_sudoku.pt` | Modal `huynhngoccung74/lattice-diffusion-checkpoints` — `/scaled_hrm/full_seed0_2667s_bs768_20261006_010536.pt` | 34,50% (Scaled Sudoku) |
-| TRM | `checkpoints/trm_sudoku_extreme.pt` | Modal `huynhnhatminh20102005/samsung-trm` — `/checkpoints/attn_extreme_60k/step_52080` | ~75–87% (Sudoku-Extreme, variant attention) |
-| ❄️ Snowflake (LDT) | `checkpoints/snowflake_sudoku.pt` | Modal `huynhnhatminh20102005/lattice-diffusion-checkpoints` — `/snowflake/seed0_1000s_bs512_aug1_20261003_044719_20261003_044719.pt` | 100% (Snowflake test, 1.000/1.000) |
+| LDT | `checkpoints/ldt_scaled_sudoku.pt` | Checkpoint nội bộ của đồ án — LDT, 4.000 bước × batch 512 | 99,94% (Scaled Sudoku) |
+| HRM | `checkpoints/hrm_scaled_sudoku.pt` | Checkpoint nội bộ của đồ án — HRM, 2.667 bước × batch 768 | 34,50% (Scaled Sudoku) |
+| TRM | `checkpoints/trm_sudoku_extreme.pt` | Checkpoint của code gốc TinyRecursiveModels — variant attention, 60k epochs, step 52080 | ~75–87% (Sudoku-Extreme, variant attention) |
+| ❄️ Snowflake (LDT) | `checkpoints/snowflake_sudoku.pt` | Checkpoint nội bộ của đồ án — LDT, 1.000 bước × batch 512, dữ liệu CVC5 | 100% (Snowflake test, 1.000/1.000) |
 
 Thư mục `checkpoints/` đã nằm trong `.gitignore`.
 
-### Tải checkpoint từ Modal
+### Chuẩn bị checkpoint
 
-Nếu file chưa có (hoặc bị hỏng), chạy:
+Nếu môi trường đã cấu hình sẵn script tải và file chưa có (hoặc bị hỏng), chạy:
 
 ```bash
 # Tải tất cả checkpoint còn thiếu
@@ -70,7 +70,7 @@ python -m gradio_demo.fetch_checkpoints --model hrm
 python -m gradio_demo.fetch_checkpoints --model trm --force
 ```
 
-Script tự chọn đúng Modal profile cho từng volume, kiểm tra file zip/torch sau khi tải, và bỏ qua file đã hợp lệ. Trên Windows, script dùng Modal Python client với concurrency 1 vì CLI `modal volume get` có thể làm hỏng file lớn khi tải song song.
+Script tự chọn đúng nguồn cho từng checkpoint, kiểm tra file zip/torch sau khi tải, và bỏ qua file đã hợp lệ. Trên Windows, script dùng concurrency 1 vì tải song song có thể làm hỏng file lớn. Nếu không dùng script, chỉ cần chép các file `.pt` vào `checkpoints/` với đúng tên trong bảng trên.
 
 ---
 
@@ -80,11 +80,11 @@ Script tự chọn đúng Modal profile cho từng volume, kiểm tra file zip/t
 gradio_demo/
 ├── __init__.py          # Khởi tạo package
 ├── app.py               # Gradio Web UI chính
-├── registry.py          # Bảng model → checkpoint + metadata Modal
+├── registry.py          # Bảng model → checkpoint + metadata nguồn
 ├── solver.py            # Nạp checkpoint và suy luận LDT / HRM / TRM / Snowflake
 ├── snowflake.py         # Mã hoá, kiểm tra và vẽ bàn cờ Snowflake (SVG)
 ├── snowflake_examples.json # 10 puzzle Snowflake mẫu (n = 4…8)
-├── fetch_checkpoints.py # Tải checkpoint từ Modal về checkpoints/
+├── fetch_checkpoints.py # Tải checkpoint còn thiếu về checkpoints/
 ├── utils.py             # Xử lý chuỗi đề bài, vẽ bảng HTML, kiểm tra luật
 ├── examples.py          # Câu đố Sudoku mẫu kèm nghiệm chuẩn
 └── README.md            # Tài liệu này

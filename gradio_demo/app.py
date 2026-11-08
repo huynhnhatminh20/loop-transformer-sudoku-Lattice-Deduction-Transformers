@@ -8,7 +8,7 @@ The UI auto-loads a checkpoint for the selected model:
 Snowflake Sudoku (hexagonal, LDT) lives in its own tab and auto-loads:
   LDT  -> checkpoints/snowflake_sudoku.pt
 
-Fetch missing checkpoints from Modal with:
+Fetch missing checkpoints with:
     python -m gradio_demo.fetch_checkpoints --all
 
 Launch:
@@ -98,7 +98,7 @@ def format_meta_markdown(meta: dict[str, Any] | None) -> str:
             "> ⚠️ **Chưa nạp checkpoint.**\n"
             "> Chọn mô hình ở trên — giao diện sẽ tự nạp checkpoint mặc định.\n"
             "> Nếu file chưa có, chạy `python -m gradio_demo.fetch_checkpoints --all` "
-            "để tải từ Modal."
+            "để tải checkpoint."
         )
 
     status_icon = "🧪" if meta.get("is_scratch") else "✅"

@@ -1,7 +1,7 @@
 """Model registry for the Gradio demo.
 
 Each entry maps a short model key to the checkpoint that should be loaded by
-default, plus the Modal location it can be fetched from.  Keeping this in one
+default, plus the storage location it can be fetched from.  Keeping this in one
 place is what lets the UI "auto-fill" the checkpoint when the user switches
 model instead of asking them to browse for a file every time.
 """
@@ -48,7 +48,7 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         family="ldt",
         local_path="checkpoints/ldt_scaled_sudoku.pt",
         accuracy="99,94% test (10.233/10.239)",
-        source_note="LDT huấn luyện trên Modal: 4.000 bước × batch 512",
+        source_note="LDT huấn luyện: 4.000 bước × batch 512",
         modal_profile="huynhngoccung74",
         modal_volume="lattice-diffusion-checkpoints",
         modal_path="/scaled/seed0_4000s_bs512_20261003_131000.pt",
@@ -59,7 +59,7 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         family="hrm",
         local_path="checkpoints/hrm_scaled_sudoku.pt",
         accuracy="34,50% test (3.532/10.239)",
-        source_note="HRM huấn luyện trên Modal: 2.667 bước × batch 768",
+        source_note="HRM huấn luyện: 2.667 bước × batch 768",
         modal_profile="huynhngoccung74",
         modal_volume="lattice-diffusion-checkpoints",
         modal_path="/scaled_hrm/full_seed0_2667s_bs768_20261006_010536.pt",
@@ -87,7 +87,7 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         family="snowflake",
         local_path="checkpoints/snowflake_sudoku.pt",
         accuracy="100% test (1.000/1.000, 0 sai, 0 timeout)",
-        source_note="LDT huấn luyện trên Modal: 1.000 bước × batch 512, dữ liệu CVC5",
+        source_note="LDT huấn luyện: 1.000 bước × batch 512, dữ liệu CVC5",
         modal_profile="huynhnhatminh20102005",
         modal_volume="lattice-diffusion-checkpoints",
         modal_path=(
