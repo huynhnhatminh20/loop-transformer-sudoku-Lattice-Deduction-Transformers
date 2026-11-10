@@ -18,6 +18,9 @@ wandb.api
 /scaled-sudoku-instances/
 /scaled_sudoku_split.jsonl
 
+# Local modal directory
+src/lattice_diffusion/modal/
+
 # Tool caches
 .pytest_cache/
 .mypy_cache/
