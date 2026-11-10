@@ -85,6 +85,8 @@ gradio_demo/
 ├── snowflake.py         # Mã hoá, kiểm tra và vẽ bàn cờ Snowflake (SVG)
 ├── snowflake_examples.json # 10 puzzle Snowflake mẫu (n = 4…8)
 ├── fetch_checkpoints.py # Tải checkpoint còn thiếu về checkpoints/
+├── run_demo.bat         # Launcher Windows (python native)
+├── run_demo_wsl.bat     # Launcher dự phòng chạy trong WSL
 ├── utils.py             # Xử lý chuỗi đề bài, vẽ bảng HTML, kiểm tra luật
 ├── examples.py          # Câu đố Sudoku mẫu kèm nghiệm chuẩn
 └── README.md            # Tài liệu này
@@ -118,6 +120,22 @@ python gradio_demo/app.py --port 8080 --share
 ```
 
 Sau đó mở `http://127.0.0.1:7860`.
+
+Trên Windows có thể dùng launcher:
+
+```bat
+gradio_demo\run_demo.bat
+```
+
+Nếu Windows chặn DLL (`WinError 4551`, Application Control / Smart App Control),
+chạy bản WSL thay thế:
+
+```bat
+gradio_demo\run_demo_wsl.bat --model ldt
+```
+
+Script WSL tự kiểm tra/cài `torch gradio numpy`, chạy demo trong Ubuntu và vẫn
+phục vụ ở `http://127.0.0.1:7860` cho trình duyệt Windows.
 
 ### 3. Quy trình trên giao diện
 

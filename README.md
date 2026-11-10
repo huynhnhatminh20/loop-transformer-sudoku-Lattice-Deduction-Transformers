@@ -106,6 +106,41 @@ Script kiểm tra file sau khi tải và bỏ qua file đã hợp lệ. Nếu kh
 script, chỉ cần chép 4 file `.pt` vào `checkpoints/` với đúng tên như bảng
 trên. Giao diện cũng cho phép kéo-thả file `.pt` để ghi đè checkpoint.
 
+### 1.4. Chạy demo trên Windows khi bị Application Control chặn
+
+Một số máy Windows bật **Smart App Control** sẽ chặn các DLL chưa ký như
+`torch\lib\torch.dll` hoặc `ujson`, khiến demo báo:
+
+```text
+OSError: [WinError 4551] An Application Control policy has blocked this file.
+```
+
+Có hai cách xử lý:
+
+1. **Chạy trong WSL (khuyến nghị, không phải tắt bảo mật):**
+
+   ```bat
+   gradio_demo\run_demo_wsl.bat
+   ```
+
+   Script tự kiểm tra WSL, cài `torch gradio numpy` nếu còn thiếu, rồi chạy
+   demo và vẫn mở được ở **http://127.0.0.1:7860** trên Windows. Có thể truyền
+   tham số như bình thường, ví dụ:
+
+   ```bat
+   gradio_demo\run_demo_wsl.bat --model hrm --device cpu
+   ```
+
+   Nếu chưa có WSL: mở PowerShell quản trị và chạy
+   `wsl --install -d Ubuntu-22.04`, sau đó khởi động lại máy.
+
+2. **Tắt Smart App Control** (Windows 11): *Windows Security → App & browser
+   control → Smart App Control → Off*. Cần quyền quản trị và khởi động lại.
+   Chỉ nên làm nếu bạn hiểu rõ đánh đổi bảo mật.
+
+Lưu ý: chạy trong WSL đọc file từ `/mnt/c/...` nên lần nạp checkpoint đầu tiên
+chậm hơn; sau khi model đã nằm trong RAM, tốc độ giải không đổi đáng kể.
+
 ---
 
 ## 2. Hướng dẫn chơi
@@ -187,7 +222,7 @@ muốn ít quay lui hơn, giảm xuống nếu muốn nhạy hơn với xung đ�
 | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | `Không tìm thấy checkpoint`                                | Đặt đúng file vào `checkpoints/` hoặc nhập đường dẫn khác                                                        |
 | `Không import được gradio`                                | `pip install gradio`                                                                                                         |
-| Windows báo `DLL load failed` khi import `ujson`/`torch` | Chính sách Application Control đang chặn DLL; thêm ngoại lệ cho thư mục site-packages hoặc dùng môi trường khác |
+| Windows báo `DLL load failed` khi import `ujson`/`torch` | Chính sách Application Control đang chặn DLL; chạy `gradio_demo\run_demo_wsl.bat` hoặc xem mục 1.4 |
 | CUDA không dùng được                                       | Chạy `--device cpu`; kiểm tra lại bản `torch` CUDA                                                                     |
 | Giải quá lâu / timeout                                       | Tăng `max_rounds`, tăng `n_chains`, hoặc dùng GPU                                                                      |
 | Cổng 7860 đang bận                                           | `python gradio_demo/app.py --port 8080`                                                                                      |

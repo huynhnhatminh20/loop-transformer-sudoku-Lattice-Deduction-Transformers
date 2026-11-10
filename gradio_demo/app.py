@@ -19,9 +19,11 @@ Launch:
 from __future__ import annotations
 
 import argparse
+import contextlib
 import inspect
 import os
 import sys
+import warnings
 
 # Disable Gradio and HF analytics/telemetry (prevents slow network timeouts on startup/exit)
 os.environ["GRADIO_ANALYTICS_ENABLED"] = "False"
@@ -43,6 +45,9 @@ SRC_DIR = REPO_ROOT / "src"
 for p in [str(REPO_ROOT), str(SRC_DIR)]:
     if p not in sys.path:
         sys.path.insert(0, p)
+
+# Bypass Windows Application Control blocking ujson DLL in FastAPI
+sys.modules["ujson"] = None
 
 import gradio as gr
 
@@ -570,6 +575,47 @@ def on_solve_snowflake(
         )
 
 
+def _appearance_kwargs() -> tuple[dict[str, object], dict[str, object]]:
+    """Place theme/css where the installed Gradio version expects them.
+
+    Gradio 5.x accepts ``theme``/``css`` in the ``Blocks`` constructor, while
+    Gradio 6.x moved them to ``Blocks.launch()``.  Resolve the correct target
+    by inspecting the signatures so the demo runs on both major versions.
+    """
+    try:
+        launch_params = inspect.signature(gr.Blocks.launch).parameters
+    except (TypeError, ValueError):  # pragma: no cover - defensive
+        launch_params = {}
+    try:
+        init_params = inspect.signature(gr.Blocks.__init__).parameters
+    except (TypeError, ValueError):  # pragma: no cover - defensive
+        init_params = {}
+
+    blocks_kwargs: dict[str, object] = {}
+    launch_kwargs: dict[str, object] = {}
+    for key, value in (("theme", gr.themes.Soft()), ("css", CUSTOM_CSS)):
+        if key in launch_params:
+            launch_kwargs[key] = value
+        elif key in init_params:
+            blocks_kwargs[key] = value
+        else:  # pragma: no cover - unknown Gradio version
+            print(f"Warning: Gradio version does not accept '{key}'; skipping.", flush=True)
+    return blocks_kwargs, launch_kwargs
+
+
+@contextlib.contextmanager
+def _blocks_context(**kwargs: object):
+    """Build a ``gr.Blocks`` context, hiding Gradio 5.x theme/css deprecations."""
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message=".*parameter in the Blocks constructor.*",
+            category=DeprecationWarning,
+        )
+        with gr.Blocks(**kwargs) as demo:
+            yield demo
+
+
 def build_app(
     initial_checkpoint: str | None = None,
     initial_device: str = "auto",
@@ -628,7 +674,12 @@ def build_app(
     default_sf_ckpt = str(sf_checkpoint)
     default_sf_example = SNOWFLAKE_EXAMPLES[0]
 
-    with gr.Blocks(title="LDT / HRM / TRM Sudoku & Snowflake Solver", analytics_enabled=False) as demo:
+    blocks_appearance, _ = _appearance_kwargs()
+    with _blocks_context(
+        title="LDT / HRM / TRM Sudoku & Snowflake Solver",
+        analytics_enabled=False,
+        **blocks_appearance,
+    ) as demo:
         gr.Markdown(
             """
             # 🧩 Lattice Deduction Transformers (LDT) — Sudoku Solver
@@ -1159,13 +1210,13 @@ def main():
         initial_device=args.device,
         initial_model=args.model,
     )
+    _, launch_appearance = _appearance_kwargs()
     print(f"Khởi động Gradio App trên http://{args.host}:{args.port}...", flush=True)
     app.launch(
         server_name=args.host,
         server_port=args.port,
         share=args.share,
-        theme=gr.themes.Soft(),
-        css=CUSTOM_CSS,
+        **launch_appearance,
     )
 
 
