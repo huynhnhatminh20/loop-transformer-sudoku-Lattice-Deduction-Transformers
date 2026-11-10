@@ -85,7 +85,7 @@ gradio_demo/
 ├── snowflake.py         # Mã hoá, kiểm tra và vẽ bàn cờ Snowflake (SVG)
 ├── snowflake_examples.json # 10 puzzle Snowflake mẫu (n = 4…8)
 ├── fetch_checkpoints.py # Tải checkpoint còn thiếu về checkpoints/
-├── run_demo.bat         # Launcher Windows (python native)
+├── run_demo.bat         # Launcher Windows (tự fallback sang WSL)
 ├── run_demo_wsl.bat     # Launcher dự phòng chạy trong WSL
 ├── utils.py             # Xử lý chuỗi đề bài, vẽ bảng HTML, kiểm tra luật
 ├── examples.py          # Câu đố Sudoku mẫu kèm nghiệm chuẩn
@@ -127,8 +127,9 @@ Trên Windows có thể dùng launcher:
 gradio_demo\run_demo.bat
 ```
 
-Nếu Windows chặn DLL (`WinError 4551`, Application Control / Smart App Control),
-chạy bản WSL thay thế:
+Launcher thử Python Windows trước; nếu DLL bị chặn (`WinError 4551`,
+Application Control / Smart App Control) hoặc thiếu gói, nó tự chuyển sang WSL.
+Có thể gọi thẳng bản WSL:
 
 ```bat
 gradio_demo\run_demo_wsl.bat --model ldt

@@ -54,6 +54,9 @@ Trên Windows có thể nhấp đúp hoặc chạy:
 gradio_demo\run_demo.bat
 ```
 
+Script tự kiểm tra Python Windows; nếu bị Application Control chặn DLL, nó tự
+chuyển sang WSL (xem mục 1.4).
+
 Sau đó mở **http://127.0.0.1:7860**.
 
 Một số cách chạy khác:
@@ -117,15 +120,24 @@ OSError: [WinError 4551] An Application Control policy has blocked this file.
 
 Có hai cách xử lý:
 
-1. **Chạy trong WSL (khuyến nghị, không phải tắt bảo mật):**
+1. **Dùng `run_demo.bat` (tự động chuyển sang WSL):**
+
+   ```bat
+   gradio_demo\run_demo.bat
+   ```
+
+   Script thử Python Windows trước; nếu không import được `torch`/`gradio`
+   (do thiếu gói hoặc bị Application Control chặn), nó tự gọi bản WSL bên dưới.
+   Vẫn mở được ở **http://127.0.0.1:7860** trên Windows.
+
+2. **Chạy thẳng bản WSL** nếu muốn bỏ qua bước kiểm tra native:
 
    ```bat
    gradio_demo\run_demo_wsl.bat
    ```
 
    Script tự kiểm tra WSL, cài `torch gradio numpy` nếu còn thiếu, rồi chạy
-   demo và vẫn mở được ở **http://127.0.0.1:7860** trên Windows. Có thể truyền
-   tham số như bình thường, ví dụ:
+   demo. Có thể truyền tham số như bình thường, ví dụ:
 
    ```bat
    gradio_demo\run_demo_wsl.bat --model hrm --device cpu
@@ -134,7 +146,7 @@ Có hai cách xử lý:
    Nếu chưa có WSL: mở PowerShell quản trị và chạy
    `wsl --install -d Ubuntu-22.04`, sau đó khởi động lại máy.
 
-2. **Tắt Smart App Control** (Windows 11): *Windows Security → App & browser
+3. **Tắt Smart App Control** (Windows 11): *Windows Security → App & browser
    control → Smart App Control → Off*. Cần quyền quản trị và khởi động lại.
    Chỉ nên làm nếu bạn hiểu rõ đánh đổi bảo mật.
 
